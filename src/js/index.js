@@ -24,7 +24,7 @@
             var IMG_EXTENSION = '.png';
             var FILE_LOGGER = '/tmp/log-servidor.txt';
             var RETARDO_MIN=1000;
-            var RETARDO_MAX=5000;
+            var RETARDO_MAX=6000;
             var off_click = 0; //evitar multiples clicks en la lista de amigos
 	    var retiro = 0; //para que ante el retiro del oponente solo reiniciar el server una vez
 	    var soyjugador2 = 0; //para identificarme como jugador2 y reiniciar si el server se desconecta
