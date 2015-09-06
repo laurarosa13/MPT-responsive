@@ -1,0 +1,10 @@
+{
+    "name": "MXT",
+    "version": 0.1,
+    "main": "index.html",
+    "window": {
+        "toolbar": false,
+        "position": "center",
+        "fullscreen": true
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "mazo": [
+        {"id": 0, "lados": 4, "concavidad": "convexo", "img": "00"},
+        {"id": 1, "lados": 6, "concavidad": "convexo", "img": "01"},
+        {"id": 2, "lados": 5, "concavidad": "cóncavo", "img": "02"},
+        {"id": 3, "lados": 4, "concavidad": "convexo", "img": "03"},
+        {"id": 4, "lados": 3, "concavidad": "convexo", "img": "04"},
+        {"id": 5, "lados": 6, "concavidad": "cóncavo", "img": "05"},
+        {"id": 6, "lados": 4, "concavidad": "convexo", "img": "06"},
+        {"id": 7, "lados": 4, "concavidad": "convexo", "img": "07"},
+        {"id": 8, "lados": 4, "concavidad": "convexo", "img": "08"},
+        {"id": 9, "lados": 3, "concavidad": "convexo", "img": "09"},
+        {"id": 10, "lados": 3, "concavidad": "convexo", "img": "10"},
+        {"id": 11, "lados": 4, "concavidad": "convexo", "img": "11"},
+        {"id": 12, "lados": 4, "concavidad": "cóncavo", "img": "12"},
+        {"id": 13, "lados": 3, "concavidad": "convexo", "img": "13"},
+        {"id": 14, "lados": 3, "concavidad": "convexo", "img": "14"},
+        {"id": 15, "lados": 4, "concavidad": "cóncavo", "img": "15"},
+        {"id": 16, "lados": 3, "concavidad": "convexo", "img": "16"},
+        {"id": 17, "lados": 3, "concavidad": "convexo", "img": "17"},
+        {"id": 18, "lados": 4, "concavidad": "convexo", "img": "18"},
+        {"id": 19, "lados": 4, "concavidad": "convexo", "img": "19"},
+        {"id": 20, "lados": 5, "concavidad": "convexo", "img": "20"},
+        {"id": 21, "lados": 5, "concavidad": "convexo", "img": "21"},
+        {"id": 22, "lados": 4, "concavidad": "convexo", "img": "22"},
+        {"id": 23, "lados": 4, "concavidad": "convexo", "img": "23"}
+    ]
+}
