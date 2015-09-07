@@ -114,7 +114,6 @@
 				//este evento se produce cuando se retira solo el oponente y solo en la primera desconexion
 				retiro++;
 				socket.disconnect();
-				modo = 'true';
 
 				console.log('Se desconecto el cliente'); 
                         	$("#juego, #volver, #titulo, #resultados").hide();
@@ -136,6 +135,8 @@
 			if (soyjugador2 == 1) {
 				console.log('Se desconecto el server');
 				socket.disconnect();
+				modo = 'true';
+
                         	$("#juego, #titulo, #resultados").hide();
                         	$("#msg .alert-warning").find('div').html('<strong>Cuidado: </strong> Se perdio conexi&oacute;n con el servidor volviendo a la sala de amigos.');
                         	$("#msg .alert-warning").show("slow");
