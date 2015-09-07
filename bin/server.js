@@ -128,7 +128,8 @@ function get_mano(jugadores, indice) {
     return {
         jugador1: { nro_jugador: 'jugador1', carta: jugadores.jugador1.mazo[indice], contador: jugadores.jugador1.contador },
         jugador2: { nro_jugador: 'jugador2', carta: jugadores.jugador2.mazo[indice], contador: jugadores.jugador2.contador },
-        contadorGuerra: jugadores.contadorGuerra
+        contadorGuerra: jugadores.contadorGuerra,
+	nro_mano: indice
     }
 }
 

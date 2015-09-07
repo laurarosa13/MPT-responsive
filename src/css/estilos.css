@@ -28,7 +28,7 @@
 
 body { background: url("../img/background_verde.png") }
 
-#titulo, #resultados, #amigos, #juego, #guerra { display:none; }
+#titulo, #resultados, #amigos, #juego, #mano .guerra, #mano .sin-guerra , #mano .info { display:none; }
 
 .contenedor {
 	position:relative;
@@ -301,11 +301,22 @@ input:focus {
 	float:left;
 }
 
+#mano .info {
+	width:100%;
+	height:20px;
+	overflow:hidden;
+	font-family:droid_sansregular;
+	line-height:110%;
+	color:#555555;
+	font-size:15px;
+	padding-bottom:3px;
+	padding-top:3px;
+}
 
-#mano .centrar {
-	width:390px;;
-	margin:auto;
-	text-align:center;
+.guerra {
+	width:100%;
+	height:71px;
+	overflow:hidden;
 }
 
 .guerra span {
@@ -314,12 +325,43 @@ input:focus {
 	font-size:14px;
 }
 
+.sin-guerra {
+	width:100%;
+	height:71px;
+	overflow:hidden;
+}
+
+#mano .centrar {
+	width:390px;
+	margin:auto;
+	text-align:center;
+}
+
 #mano .centrar .respuesta {
-	cursor:pointer;
 	width:170px;
 	height:255px;
 	float:left;
-	overflow: hidden;
+}
+
+#card1 {
+	width:100%;
+	height:100%;
+	position:relative;
+}
+
+#card2 {
+	width:100%;
+	height:100%;
+	position:relative;
+}
+
+#mano .centrar .respuesta .front {
+	position:absolute;
+}
+
+#mano .centrar .respuesta .back {
+	position:relative;
+	cursor:pointer;
 }
 
 #mano .sep {
@@ -333,6 +375,9 @@ input:focus {
 	width:100%;
 	min-width:390px;
 	margin:auto;
+}
+
+#empate .back {
 	cursor:pointer;
 }
 

@@ -28,6 +28,7 @@
             var off_click = 0; //evitar multiples clicks en la lista de amigos
 	    var retiro = 0; //para que ante el retiro del oponente solo reiniciar el server una vez
 	    var soyjugador2 = 0; //para identificarme como jugador2 y reiniciar si el server se desconecta
+	    var mano = 0; //para identificar que mano se esta jugando y si se repite
 
             function init_server(server_name) {
                 var spawn = require('child_process').spawn;
@@ -41,7 +42,7 @@
 
             function init() {
                 local_ip = require('my-local-ip')();
-                var socket = io("http://" + local_ip + ":3000/", {query: 'nro_jugador=jugador1&nombre_jugador=' + usuario_info.nombre});
+                var socket = io("http://" + local_ip + ":3000/", {query: 'nro_jugador=jugador1&nombre_jugador=' + usuario_info.nombre, 'force new connection':true});
                 usuario_info.nro_jugador = 'jugador1';
                 usuario_info.ip = local_ip;
 
@@ -95,17 +96,22 @@
 
                     socket.on('listo', function (o) {
 			retiro = 0;
+			mano = 0;
                         $("#amigos").hide();
                         $("#titulo").html('A Jugar!!!');
                         $(".avatar1 h3").html(o.jugador1.nombre);
                         $(".avatar2 h3").html(o.jugador2.nombre);
+			$("#card1").flip({ axis: 'y', trigger: 'manual', reverse: true });
+			$("#card2").flip({ axis: 'y', trigger: 'manual', reverse: false });
                    	$("#juego, #titulo").show();
+			console.log('Listos para iniciar la partida');
                     });
 
                     socket.on('retiro', function (estado) {
 			if ((estado == 0) && (retiro == 0)) {
 				//este evento se produce cuando se retira solo el oponente y solo en la primera desconexion
 				retiro++;
+				socket.disconnect();
 				console.log('Se desconecto el cliente'); 
                         	$("#juego, #volver, #titulo, #resultados").hide();
                         	$("#msg .alert-warning").find('div').html('<strong>Cuidado: </strong> Se perdio conexi&oacute;n con el cliente volviendo a la sala de amigos.');
@@ -198,17 +204,37 @@
                         // Cartas
                         $("#mano .jugador1").prop("src", IMG_CARPETA + IMG_NOMBRE + o.jugador1.carta.img + IMG_EXTENSION);
 			$("#mano .jugador2").prop("src", IMG_CARPETA + IMG_NOMBRE + o.jugador2.carta.img + IMG_EXTENSION);
-
-
+			
+			//animacion cartas
+			$("#card1").flip(false);
+			$("#card2").flip(false);
+                       	setTimeout(function () {
+				$("#card1").flip(true);
+				$("#card2").flip(true);
+                       	}, RETARDO_MIN);
+			//fin animacion
                         $("#mano .empate").prop("src", IMG_CARPETA + 'empate' + IMG_EXTENSION);
+		
+			//identifico si se repitio la mano o no
+			mano++;
+			if ((o.nro_mano+1) != mano) {
+			   mano--;
+	                   $("#mano .info").html('Las respuestas fueron diferentes, se repite la mano ' + (o.nro_mano+1));
+			} else {
+                       		$("#mano .info").html('Se juega ahora la mano ' + (o.nro_mano+1));
+			}
+		        $("#mano .info").show();
+
                         // Cuando hay Guerra
                         if (o.contadorGuerra) {
                             $("#mano .guerra span").html(o.contadorGuerra);
+			    $("#mano .sin-guerra").hide();
                             $("#mano .guerra").show();
                         } else {
                             $("#mano .guerra").hide();
-                        }
-                        $("#mano .respuesta").on('click', function (event) {
+			    $("#mano .sin-guerra").show();
+                       }
+                        $("#mano .back").on('click', function (event) {
 			    event.stopPropagation();
                             console.log('Se clickea carta');
                             console.log(JSON.stringify({jugador: usuario_info.nombre, respuesta: $(this).find('img').prop('class')}, null, 2));
@@ -216,7 +242,7 @@
                             $("#mano .jugador1").prop("src", IMG_CARPETA + IMG_NOMBRE + o.jugador1.carta.img + '_deshabilitado' + IMG_EXTENSION);
                             $("#mano .jugador2").prop("src", IMG_CARPETA + IMG_NOMBRE + o.jugador2.carta.img + '_deshabilitado' + IMG_EXTENSION);
                             $("#mano .empate").prop("src", IMG_CARPETA + 'empate_deshabilitado' + IMG_EXTENSION);
-                            $("#mano .respuesta").off('click');
+                            $("#mano .back").off('click');
                             socket.emit('respuesta', {nro_jugador: usuario_info.nro_jugador, ip: usuario_info.ip, nombre: usuario_info.nombre, respuesta: $(this).find('img').prop('class')});
                         });
                         $("#mano").show();
