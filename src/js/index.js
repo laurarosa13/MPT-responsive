@@ -28,6 +28,7 @@
             var off_click = 0; //evitar multiples clicks en la lista de amigos
 	    var retiro = 0; //para que ante el retiro del oponente solo reiniciar el server una vez
 	    var soyjugador2 = 0; //para identificarme como jugador2 y reiniciar si el server se desconecta
+	    var modo = 'false'; //para identificar si el modo de reconexion es forzado, se utiliza en caso de retiro
 	    var mano = 0; //para identificar que mano se esta jugando y si se repite
 
             function init_server(server_name) {
@@ -40,9 +41,11 @@
                 return server_output;
             }
 
-            function init() {
+            function init(modo) {
                 local_ip = require('my-local-ip')();
-                var socket = io("http://" + local_ip + ":3000/", {query: 'nro_jugador=jugador1&nombre_jugador=' + usuario_info.nombre, 'force new connection':true});
+               	var socket = io("http://" + local_ip + ":3000/", {query: 'nro_jugador=jugador1&nombre_jugador=' + usuario_info.nombre, 'force new connection': modo});
+		modo = 'false';
+
                 usuario_info.nro_jugador = 'jugador1';
                 usuario_info.ip = local_ip;
 
@@ -54,7 +57,6 @@
                 var socket = io("http://" + amigo_ip + ":3000/", {query: 'nro_jugador=jugador2&nombre_jugador=' + usuario_info.nombre, 'force new connection':true});
                 usuario_info.nro_jugador = 'jugador2';
                 usuario_info.ip = amigo_ip;
-
                 registrar_espera(socket);
             };
 
@@ -112,6 +114,8 @@
 				//este evento se produce cuando se retira solo el oponente y solo en la primera desconexion
 				retiro++;
 				socket.disconnect();
+				modo = 'true';
+
 				console.log('Se desconecto el cliente'); 
                         	$("#juego, #volver, #titulo, #resultados").hide();
                         	$("#msg .alert-warning").find('div').html('<strong>Cuidado: </strong> Se perdio conexi&oacute;n con el cliente volviendo a la sala de amigos.');
@@ -320,7 +324,7 @@
                     $("#amigos .caption").find("h3").html(nombre);
 		    iniciar_discover(nombre);
                     setTimeout(function () {
-                        init(); //Me conecto a mi propio server
+                        init(modo); //Me conecto a mi propio server
                     }, RETARDO_MIN);
             	    return false;
                 }
