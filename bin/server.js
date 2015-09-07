@@ -38,7 +38,7 @@ function iniciar_servidor(PUERTO) {
 
 			if (cantidad(jugadores) == MAX_JUGADORES) {
 				console.log('Detenemos el discover de ambos jugadores');
-				io.emit('deslistar', jugadores.jugador2.ip);
+				io.emit('deslistar', jugadores);
 				jugadores.contadorGuerra = 0;
 				repartir_cartas(jugadores);
 				io.emit('listo', get_jugadores(jugadores));

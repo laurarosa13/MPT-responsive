@@ -27,8 +27,9 @@
             var RETARDO_MAX=6000;
             var off_click = 0; //evitar multiples clicks en la lista de amigos
 	    var retiro = 0; //para que ante el retiro del oponente solo reiniciar el server una vez
+	    var soyjugador1 = 0; //para identificarme como jugador1, ojo no es lo mismo que server
 	    var soyjugador2 = 0; //para identificarme como jugador2 y reiniciar si el server se desconecta
-	    var modo = 'false'; //para identificar si el modo de reconexion es forzado, se utiliza en caso de retiro
+	    var modo = false; //para identificar si el modo de reconexion es forzado, se utiliza en caso de retiro
 	    var mano = 0; //para identificar que mano se esta jugando y si se repite
 
             function init_server(server_name) {
@@ -44,7 +45,7 @@
             function init(modo) {
                 local_ip = require('my-local-ip')();
                	var socket = io("http://" + local_ip + ":3000/", {query: 'nro_jugador=jugador1&nombre_jugador=' + usuario_info.nombre, 'force new connection': modo});
-		modo = 'false';
+		modo = false;
 
                 usuario_info.nro_jugador = 'jugador1';
                 usuario_info.ip = local_ip;
@@ -63,12 +64,20 @@
             function registrar_espera(socket) {
                  socket.on('connect', function () {
 
-                    socket.on('deslistar', function (ip) {
+                    socket.on('deslistar', function (ips) {
 			nodo.stop();
+			var ip1 = ips.jugador1.ip;
+			var ip2 = ips.jugador2.ip;
+			//me identifico como jugador1 ademas de server
+			var patron = '::ffff:';
+			var format_ip1 = ip1.replace(patron,'');
+			if (local_ip == format_ip1) {
+				soyjugador1 = 1;
+			}
 			//pongo el server del jugador dos en estado ocupado
 			var patron = '::ffff:';
-			var format_ip = ip.replace(patron,'');
-			if (local_ip == format_ip) {
+			var format_ip2 = ip2.replace(patron,'');
+			if (local_ip == format_ip2) {
 	            		server_child.kill('SIGHUP');
 				soyjugador2 = 1;
 			}
@@ -81,12 +90,13 @@
 			if (local_ip == format_ip) {
 				console.log("Me desconecto del socket porque el server esta ocupado");
 				socket.disconnect();
+				modo = false;
 			        nodo.stop();
 
                         	$("#msg .alert-warning").find('div').html('<strong>Cuidado: </strong> El jugador ya inicio una partida con otro usuario.');
                         	$("#msg .alert-warning").show("slow");
 
-				reiniciar_server();
+				reiniciar_server(modo);
                   	
                         	setTimeout(function () {
                         	    $("#msg .alert-warning").hide();
@@ -114,13 +124,15 @@
 				//este evento se produce cuando se retira solo el oponente y solo en la primera desconexion
 				retiro++;
 				socket.disconnect();
+				if (soyjugador1 == 1) { modo = true; } else { modo = false; }
+				soyjugador1 = 0;
 
 				console.log('Se desconecto el cliente'); 
                         	$("#juego, #volver, #titulo, #resultados").hide();
                         	$("#msg .alert-warning").find('div').html('<strong>Cuidado: </strong> Se perdio conexi&oacute;n con el cliente volviendo a la sala de amigos.');
                         	$("#msg .alert-warning").show("slow");
 
-				reiniciar_server();
+				reiniciar_server(modo);
 
                         	setTimeout(function () {
                         	    $("#msg .alert-warning").hide();
@@ -135,13 +147,13 @@
 			if (soyjugador2 == 1) {
 				console.log('Se desconecto el server');
 				socket.disconnect();
-				modo = 'true';
+				modo = false;
 
                         	$("#juego, #titulo, #resultados").hide();
                         	$("#msg .alert-warning").find('div').html('<strong>Cuidado: </strong> Se perdio conexi&oacute;n con el servidor volviendo a la sala de amigos.');
                         	$("#msg .alert-warning").show("slow");
 				
-				reiniciar_server();
+				reiniciar_server(modo);
 				soyjugador2 = 0;
                         	setTimeout(function () {
                         	    $("#msg .alert-warning").hide();
@@ -288,7 +300,7 @@
                 $("#amigos").show();
             }
 
-	    function reiniciar_server() {
+	    function reiniciar_server(modo) {
             	if (server_child) { 
     			console.log('Matando el server');
              		server_child.kill('SIGTERM');
@@ -296,7 +308,7 @@
 	    	server_child = init_server(usuario_info.nombre);// Iniciar servidor
 
 		setTimeout(function () {
-                	init(); //Me conecto a mi propio server
+                	init(modo); //Me conecto a mi propio server
                 }, RETARDO_MIN);
 	    }
 
@@ -325,6 +337,7 @@
                     $("#amigos .caption").find("h3").html(nombre);
 		    iniciar_discover(nombre);
                     setTimeout(function () {
+			modo = false;
                         init(modo); //Me conecto a mi propio server
                     }, RETARDO_MIN);
             	    return false;
