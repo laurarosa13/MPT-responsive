@@ -40,7 +40,13 @@ function iniciar_servidor(PUERTO) {
 				console.log('Detenemos el discover de ambos jugadores');
 				io.emit('deslistar', jugadores);
 				jugadores.contadorGuerra = 0;
+				indice = 0;
+				respuestaCorrecta = "";
+				respuestaAuxiliar = {};
+				ultimoGanador = "";
+				resultados = [];
 				repartir_cartas(jugadores);
+				console.log("Listos para iniciar la partida");
 				io.emit('listo', get_jugadores(jugadores));
 				console.log('Se juega ahora la mano: ' + indice);
 				io.emit('mano', get_mano(jugadores, indice));
@@ -71,7 +77,7 @@ function iniciar_servidor(PUERTO) {
 				} else if (jugadores.jugador1.mazo[indice].lados < jugadores.jugador2.mazo[indice].lados) {
 				respuestaCorrecta = "jugador2";
 			} else {
-			respuestaCorrecta = "empate";
+				respuestaCorrecta = "empate";
 			}
 			respuestaAuxiliar.respuestaCorrecta = respuestaCorrecta;
 			resultados[indice] = respuestaAuxiliar;
@@ -90,7 +96,7 @@ function iniciar_servidor(PUERTO) {
 				}
 				indice++;
 			} else {
-			console.log('Las respuestas difieren Repregunto');
+				console.log('Las respuestas difieren Repregunto');
 			}
 			respuestaAuxiliar = {};
 			console.log('Se juega ahora la mano: ' + indice);
@@ -101,8 +107,8 @@ function iniciar_servidor(PUERTO) {
 					jugadores[ultimoGanador].contador += jugadores.contadorGuerra;
 					jugadores.contadorGuerra = 0;
 				}
-			io.emit('tabla', resultados);
-			return;
+				io.emit('tabla', resultados);
+				return;
 			}
 			io.emit('mano', get_mano(jugadores, indice));
 			}

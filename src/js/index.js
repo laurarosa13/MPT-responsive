@@ -16,7 +16,7 @@
 	    var nodo;
            
             var server_child;
-	    var local_ip;
+            var local_ip = require('my-local-ip')();
 
 	    var usuario_info = {};
             var IMG_CARPETA = 'img/';
@@ -26,11 +26,10 @@
             var RETARDO_MIN=1000;
             var RETARDO_MAX=6000;
             var off_click = 0; //evitar multiples clicks en la lista de amigos
+            var off_click2 = 0; //evitar multiples clicks cuando selecciona la carta
 	    var retiro = 0; //para que ante el retiro del oponente solo reiniciar el server una vez
 	    var soyjugador1 = 0; //para identificarme como jugador1, ojo no es lo mismo que server
 	    var soyjugador2 = 0; //para identificarme como jugador2 y reiniciar si el server se desconecta
-	    var modo = false; //para identificar si el modo de reconexion es forzado, se utiliza en caso de retiro
-	    var mano = 0; //para identificar que mano se esta jugando y si se repite
 
             function init_server(server_name) {
                 var spawn = require('child_process').spawn;
@@ -42,10 +41,8 @@
                 return server_output;
             }
 
-            function init(modo) {
-                local_ip = require('my-local-ip')();
-               	var socket = io("http://" + local_ip + ":3000/", {query: 'nro_jugador=jugador1&nombre_jugador=' + usuario_info.nombre, 'force new connection': modo});
-		modo = false;
+            function init() {
+		var socket = io.connect("http://" + local_ip + ":3000/", {query: 'nro_jugador=jugador1&nombre_jugador=' + usuario_info.nombre});
 
                 usuario_info.nro_jugador = 'jugador1';
                 usuario_info.ip = local_ip;
@@ -55,14 +52,15 @@
             }
 
             function elegir_amigo(amigo_ip) {
-                var socket = io("http://" + amigo_ip + ":3000/", {query: 'nro_jugador=jugador2&nombre_jugador=' + usuario_info.nombre, 'force new connection':true});
+                var socket = io.connect("http://" + amigo_ip + ":3000/", {query: 'nro_jugador=jugador2&nombre_jugador=' + usuario_info.nombre, 'force new connection':true, 'reconnectionAttempts':1});
                 usuario_info.nro_jugador = 'jugador2';
                 usuario_info.ip = amigo_ip;
                 registrar_espera(socket);
             };
 
             function registrar_espera(socket) {
-                 socket.on('connect', function () {
+
+                socket.on('connect', function () {
 
                     socket.on('deslistar', function (ips) {
 			nodo.stop();
@@ -90,13 +88,12 @@
 			if (local_ip == format_ip) {
 				console.log("Me desconecto del socket porque el server esta ocupado");
 				socket.disconnect();
-				modo = false;
 			        nodo.stop();
 
                         	$("#msg .alert-warning").find('div').html('<strong>Cuidado: </strong> El jugador ya inicio una partida con otro usuario.');
                         	$("#msg .alert-warning").show("slow");
 
-				reiniciar_server(modo);
+				reiniciar_server();
                   	
                         	setTimeout(function () {
                         	    $("#msg .alert-warning").hide();
@@ -107,24 +104,23 @@
 		    });
 
                     socket.on('listo', function (o) {
-			retiro = 0;
-			mano = 0;
-                        $("#amigos").hide();
-                        $("#titulo").html('A Jugar!!!');
-                        $(".avatar1 h3").html(o.jugador1.nombre);
-                        $(".avatar2 h3").html(o.jugador2.nombre);
-			$("#card1").flip({ axis: 'y', trigger: 'manual', reverse: true });
-			$("#card2").flip({ axis: 'y', trigger: 'manual', reverse: false });
-                   	$("#juego, #titulo").show();
-			console.log('Listos para iniciar la partida');
+				retiro = 0;
+				mano = 0;
+                       		$("#amigos").hide();
+                       		$("#titulo").html('A Jugar!!!');
+                       		$(".avatar1 h3").html(o.jugador1.nombre);
+                       		$(".avatar2 h3").html(o.jugador2.nombre);
+				$("#card1").flip({ axis: 'y', trigger: 'manual', reverse: true });
+				$("#card2").flip({ axis: 'y', trigger: 'manual', reverse: false });
+                		$("#juego, #titulo").show();
+				console.log('Listos para iniciar la partida');
                     });
 
                     socket.on('retiro', function (estado) {
 			if ((estado == 0) && (retiro == 0)) {
 				//este evento se produce cuando se retira solo el oponente y solo en la primera desconexion
 				retiro++;
-				socket.disconnect();
-				if (soyjugador1 == 1) { modo = true; } else { modo = false; }
+				//socket.disconnect();
 				soyjugador1 = 0;
 
 				console.log('Se desconecto el cliente'); 
@@ -132,7 +128,7 @@
                         	$("#msg .alert-warning").find('div').html('<strong>Cuidado: </strong> Se perdio conexi&oacute;n con el cliente volviendo a la sala de amigos.');
                         	$("#msg .alert-warning").show("slow");
 
-				reiniciar_server(modo);
+				reiniciar_server();
 
                         	setTimeout(function () {
                         	    $("#msg .alert-warning").hide();
@@ -147,13 +143,13 @@
 			if (soyjugador2 == 1) {
 				console.log('Se desconecto el server');
 				socket.disconnect();
-				modo = false;
 
                         	$("#juego, #titulo, #resultados").hide();
                         	$("#msg .alert-warning").find('div').html('<strong>Cuidado: </strong> Se perdio conexi&oacute;n con el servidor volviendo a la sala de amigos.');
                         	$("#msg .alert-warning").show("slow");
 				
-				reiniciar_server(modo);
+				reiniciar_server();
+				soyjugador1 = 0;
 				soyjugador2 = 0;
                         	setTimeout(function () {
                         	    $("#msg .alert-warning").hide();
@@ -232,14 +228,7 @@
 			//fin animacion
                         $("#mano .empate").prop("src", IMG_CARPETA + 'empate' + IMG_EXTENSION);
 		
-			//identifico si se repitio la mano o no
-			mano++;
-			if ((o.nro_mano+1) != mano) {
-			   mano--;
-	                   $("#mano .info").html('Las respuestas fueron diferentes, se repite la mano ' + (o.nro_mano+1));
-			} else {
-                       		$("#mano .info").html('Se juega ahora la mano ' + (o.nro_mano+1));
-			}
+                      	$("#mano .info").html('Se juega ahora la mano ' + (o.nro_mano+1));
 		        $("#mano .info").show();
 
                         // Cuando hay Guerra
@@ -251,16 +240,23 @@
                             $("#mano .guerra").hide();
 			    $("#mano .sin-guerra").show();
                        }
-                        $("#mano .back").on('click', function (event) {
-			    event.stopPropagation();
+                        $("#mano .back").on('click', function () {
+			 //utilizo off_click para prevenir varios clicks en la carta
+			 if (off_click2 == 0) {
+			    off_click2 = 1;
+                            $("#mano .back").off('click');
                             console.log('Se clickea carta');
                             console.log(JSON.stringify({jugador: usuario_info.nombre, respuesta: $(this).find('img').prop('class')}, null, 2));
                             // Deshabilita cartas
                             $("#mano .jugador1").prop("src", IMG_CARPETA + IMG_NOMBRE + o.jugador1.carta.img + '_deshabilitado' + IMG_EXTENSION);
                             $("#mano .jugador2").prop("src", IMG_CARPETA + IMG_NOMBRE + o.jugador2.carta.img + '_deshabilitado' + IMG_EXTENSION);
                             $("#mano .empate").prop("src", IMG_CARPETA + 'empate_deshabilitado' + IMG_EXTENSION);
-                            $("#mano .back").off('click');
                             socket.emit('respuesta', {nro_jugador: usuario_info.nro_jugador, ip: usuario_info.ip, nombre: usuario_info.nombre, respuesta: $(this).find('img').prop('class')});
+
+                            setTimeout(function () {
+					off_click2 = 0;
+			    }, RETARDO_MIN);
+			} //fin off_click
                         });
                         $("#mano").show();
                     });
@@ -300,7 +296,7 @@
                 $("#amigos").show();
             }
 
-	    function reiniciar_server(modo) {
+	    function reiniciar_server() {
             	if (server_child) { 
     			console.log('Matando el server');
              		server_child.kill('SIGTERM');
@@ -308,7 +304,7 @@
 	    	server_child = init_server(usuario_info.nombre);// Iniciar servidor
 
 		setTimeout(function () {
-                	init(modo); //Me conecto a mi propio server
+                	init(); //Me conecto a mi propio server
                 }, RETARDO_MIN);
 	    }
 
@@ -337,8 +333,7 @@
                     $("#amigos .caption").find("h3").html(nombre);
 		    iniciar_discover(nombre);
                     setTimeout(function () {
-			modo = false;
-                        init(modo); //Me conecto a mi propio server
+                        init(); //Me conecto a mi propio server
                     }, RETARDO_MIN);
             	    return false;
                 }
